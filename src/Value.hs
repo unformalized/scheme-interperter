@@ -2,9 +2,9 @@
 
 module Value where
 
-data ListVal = Atom String
-             | List [ListVal]
-             | DottedList [ListVal] ListVal
+data LispVal = Atom String
+             | List [LispVal]
+             | DottedList [LispVal] LispVal
              | Number Integer
              | String String
-             | Bool Bool
+             | Bool Bool deriving Show
