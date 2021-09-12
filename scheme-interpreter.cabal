@@ -1,8 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.33.0.
 --
 -- see: https://github.com/sol/hpack
+--
+-- hash: 41f6a79b9960a21997faa7fffabc465f681c9f3fe421032061731bb8137155c9
 
 name:           scheme-interpreter
 version:        0.1.0.0
@@ -27,6 +29,7 @@ library
   exposed-modules:
       Bootstrap
       Lib
+      Parse
       Value
   other-modules:
       Paths_scheme_interpreter
