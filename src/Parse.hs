@@ -4,7 +4,8 @@ import Text.Parsec hiding (spaces)
 import Text.ParserCombinators.Parsec hiding (spaces)
 -- utils
 import Control.Monad ( liftM )
-import Control.Applicative ( liftA2 )
+import Control.Applicative ( liftA2, Alternative (empty) )
+-- struct
 import Value ( LispVal(Number, Atom, Bool, String) )
 
 symbol :: Parser Char
@@ -13,30 +14,32 @@ symbol = oneOf "!$%&|*+-/:<=?>@^_~#"
 spaces :: Parser ()
 spaces = skipMany1 space
 
-many' :: ((Stream s m t), Monoid a) => ParsecT s u m a -> ParsecT s u m a
-many' p = many1' p <|> pure mempty
-
-many1' :: ((Stream s m t), Monoid a) => ParsecT s u m a -> ParsecT s u m a
-many1' p = do { x <- p; xs <- many' p; return (x<>xs); }
-
-
 parseBackslash :: Parser Char
 parseBackslash = char '\\'
 
 parseEscape :: Parser String
 parseEscape =
-    liftA2 (\c1 c2 -> [c1, c2]) parseBackslash (
-        char '"' <|>
-        char 'n' <|>
-        char 'r' <|>
-        char 't' <|>
-        char '\\'
-    )
+    string "\\\n" <|>
+    string "\\\t" <|>
+    string "\\\\" <|>
+    string "\\\r" <|>
+    string "\\\""
+
+handleEscape :: Parser String
+handleEscape = do
+    normal <- many (noneOf "\\\"")
+    case normal of
+        [] -> return []
+        xs -> do
+            escape <- parseEscape <|> return []
+            rest <- handleEscape
+            return (normal ++ escape ++ rest)
 
 parseString :: Parser LispVal
 parseString = do
     char '"'
-    s <- many (noneOf "\"")
+    -- s <- many' (many (noneOf "\"") <|> parseEscape)
+    s <- handleEscape
     char '"'
     return $ String s
 
