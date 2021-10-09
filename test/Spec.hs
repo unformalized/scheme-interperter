@@ -1,7 +1,7 @@
 
 import Text.ParserCombinators.Parsec ( parse, Parser )
 import Value
-import Parse (parseString, handleEscape, parseEscape)
+import Parse (parseString, parseEscape)
 
 showParseResult :: Show a => Parser a -> String -> String
 showParseResult pa s = case parse pa "test: " s of
@@ -18,7 +18,7 @@ testS :: [String]
 testS = ["this is a string", "this is a string having a quote \" end"]
 
 testEscpae :: [String]
-testEscpae = ["\"", "\n", "\t"]
+testEscpae = ["\\\"", "\\\n", "\\\t"]
 
 main :: IO ()
 main = do

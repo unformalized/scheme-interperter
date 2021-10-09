@@ -1,7 +1,8 @@
+{-# LANGUAGE FlexibleContexts #-}
 module Parse where
 
-import Text.Parsec hiding (spaces)
-import Text.ParserCombinators.Parsec hiding (spaces)
+import Text.Parsec hiding (spaces, try)
+import Text.ParserCombinators.Parsec ( Parser, try )
 -- utils
 import Control.Monad ( liftM )
 import Control.Applicative ( liftA2, Alternative (empty) )
@@ -17,41 +18,29 @@ spaces = skipMany1 space
 parseBackslash :: Parser Char
 parseBackslash = char '\\'
 
-parseEscape :: Parser String
-parseEscape =
-    string "\\\n" <|>
-    string "\\\t" <|>
-    string "\\\\" <|>
-    string "\\\r" <|>
-    string "\\\""
-
-handleEscape :: Parser String
-handleEscape = do
-    normal <- many (noneOf "\\\"")
-    case normal of
-        [] -> return []
-        xs -> do
-            escape <- parseEscape <|> return []
-            rest <- handleEscape
-            return (normal ++ escape ++ rest)
+parseEscape :: Parser Char
+parseEscape = parseBackslash >> choice (zipWith escapedChar codes replacements)
+  where
+    escapedChar code replacement = char code >> return replacement
+    codes        = ['b',  'n',  'f',  'r',  't',  '\\', '\"', '/']
+    replacements = ['\b', '\n', '\f', '\r', '\t', '\\', '\"', '/']
 
 parseString :: Parser LispVal
-parseString = do
-    char '"'
-    -- s <- many' (many (noneOf "\"") <|> parseEscape)
-    s <- handleEscape
-    char '"'
-    return $ String s
+parseString = do char '"'
+                 x <- many $ chars
+                 char '"'
+                 return $ String x
+  where chars = parseEscape <|> noneOf "\""
 
 parseAtom :: Parser LispVal
 parseAtom = do
-    first <- letter <|> symbol
-    rest <- many (letter <|> digit <|> symbol)
-    let atom = first : rest
-    return $ case atom of
-        "#t" -> Bool True
-        "#f" -> Bool False
-        _ -> Atom atom
+  first <- letter <|> symbol
+  rest <- many (letter <|> digit <|> symbol)
+  let atom = first : rest
+  return $ case atom of
+    "#t" -> Bool True
+    "#f" -> Bool False
+    _ -> Atom atom
 
 parseNumber :: Parser LispVal 
 parseNumber = liftM (Number . read) $ many1 digit
