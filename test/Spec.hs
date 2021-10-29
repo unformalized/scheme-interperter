@@ -1,26 +1,40 @@
 
 import Text.ParserCombinators.Parsec ( parse, Parser )
 import Value
-import Parse (parseString, parseEscape)
+import Parse ( parseExpr, parseString, parseChar )
 
 showParseResult :: Show a => Parser a -> String -> String
 showParseResult pa s = case parse pa "test: " s of
         Left err -> "Parse error"
         Right value -> "Parse correct: " ++ show value
 
-testParseEscape :: String -> String
-testParseEscape = showParseResult parseEscape
+testParseLispVal :: String -> String
+testParseLispVal = showParseResult parseExpr
 
 testParseString :: String -> String 
 testParseString = showParseResult parseString
 
-testS :: [String]
-testS = ["this is a string", "this is a string having a quote \" end"]
+testParseChar :: String -> String
+testParseChar = showParseResult parseChar
 
-testEscpae :: [String]
-testEscpae = ["\\\"", "\\\n", "\\\t"]
+testLispVal :: [String]
+testLispVal = [
+  show "this is a string",
+  show "this is a string having a quote \" end",
+  "12394",
+  "0.123",
+  "#o123",
+  "#\\a",
+  "#xabc"
+  ]
+
+testChar = [
+  "#\\a",
+  "#\\newline"
+  ]
 
 main :: IO ()
 main = do
     putStrLn "test start: "
-    mapM_ (putStrLn . testParseString . show) testS
+    mapM_ (putStrLn . testParseChar) testChar
+    mapM_ (putStrLn . testParseLispVal) testLispVal

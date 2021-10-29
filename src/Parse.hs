@@ -6,8 +6,11 @@ import Text.ParserCombinators.Parsec ( Parser, try )
 -- utils
 import Control.Monad ( liftM )
 import Control.Applicative ( liftA2, Alternative (empty) )
+import Data.Char ( isPrint )
+import Numeric
 -- struct
-import Value ( LispVal(Number, Atom, Bool, String) )
+-- struct
+import Value ( LispVal(Number, Atom, Bool, String, Char, Float) )
 
 symbol :: Parser Char
 symbol = oneOf "!$%&|*+-/:<=?>@^_~#"
@@ -42,16 +45,54 @@ parseAtom = do
     "#f" -> Bool False
     _ -> Atom atom
 
-parseNumber :: Parser LispVal 
-parseNumber = liftM (Number . read) $ many1 digit
+parseDecNum :: Parser LispVal
+parseDecNum = do
+  decS <- many1 digit
+  let decN:_ = readDec decS
+  return . Number . fst $ decN
 
-parseNumber' :: Parser LispVal
-parseNumber' = many1 digit >>= (\num ->
-    let lispN = Number (read num)
-    in return lispN
-  )
+parseOctNum :: Parser LispVal
+parseOctNum = do
+  octS <- string "#o" >> many1 (oneOf octNS)
+  case readOct octS of
+    [] -> parserFail ("oct parse error: " ++ octS)
+    octN:_ -> return . Number . fst $ octN
+  where
+    octNS = "01234567"
 
+parseHexNum :: Parser LispVal
+parseHexNum = do
+  hexS <- string "#x" >> many1 (oneOf hexNS)
+  case readHex hexS of
+    [] -> parserFail ("hex parse error: " ++ hexS)
+    hexN:_ -> return . Number . fst $ hexN
+  where
+    hexNS = "abcdef0123456789"
+
+parseInteger :: Parser LispVal 
+parseInteger = choice [try parseDecNum, try parseOctNum, try parseHexNum]
+
+parseChar :: Parser LispVal 
+parseChar = do
+  c <- choice [try charNewline, try charSpace, try charPrint]
+  return (Char c)
+  where
+    charSpace :: Parser Char
+    charSpace = string "#\\space" >> return ' '
+    charNewline :: Parser Char
+    charNewline = string "#\\newline" >> return '\n'
+    charPrint :: Parser Char
+    charPrint = string "#\\" >> satisfy isPrint
+
+parseFloat :: Parser LispVal
+parseFloat = do
+  integer <- many digit
+  dot <- char '.'
+  frac <- many digit
+  let float:_ = readFloat (integer ++ (dot:frac))
+  return . Float . fst $ float
+  
 
 parseExpr :: Parser LispVal
-parseExpr = parseAtom <|> parseString <|> parseNumber
+parseExpr = choice [try parseInteger , try parseChar , try parseFloat , try parseAtom , try parseString]
 
