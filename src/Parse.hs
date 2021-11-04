@@ -9,8 +9,11 @@ import Control.Applicative ( liftA2, Alternative (empty) )
 import Data.Char ( isPrint )
 import Numeric
 -- struct
--- struct
-import Value ( LispVal(Number, Atom, Bool, String, Char, Float) )
+import Value ( LispVal(Number, Atom, Bool, String, Char, Float, List, DottedList, Vector) )
+import Data.Vector ()
+import Lib (listToVector, ioListToVector)
+import Control.Monad.Primitive (PrimMonad)
+import Control.Monad.ST (runST)
 
 symbol :: Parser Char
 symbol = oneOf "!$%&|*+-/:<=?>@^_~#"
@@ -89,10 +92,53 @@ parseFloat = do
   integer <- many digit
   dot <- char '.'
   frac <- many digit
-  let float:_ = readFloat (integer ++ (dot:frac))
-  return . Float . fst $ float
-  
+  let floatS = integer ++ (dot:frac)
+      floatList = readFloat floatS
+  case floatList of
+    [] -> parserFail ("float parse error: " ++ floatS)
+    (float:_) -> return .  Float . fst $ float
 
 parseExpr :: Parser LispVal
-parseExpr = choice [try parseInteger , try parseChar , try parseFloat , try parseAtom , try parseString]
+parseExpr = choice [
+  try parseInteger,
+  try parseChar,
+  try parseFloat,
+  try parseAtom,
+  try parseString,
+  try parseQuoted,
+  try parseLispList
+  ]
 
+parseList :: Parser LispVal
+parseList = liftM List $ sepBy parseExpr spaces
+
+parseDottedList :: Parser LispVal
+parseDottedList = do
+  head <- endBy parseExpr spaces
+  tail <- char '.' >> spaces >> parseExpr
+  return $ DottedList head tail
+
+parseLispList :: Parser LispVal
+parseLispList = do
+  char '('
+  els <- try parseList <|> parseDottedList
+  char ')'
+  return els
+
+parseQuoted :: Parser LispVal
+parseQuoted = do
+  char '\''
+  x <- parseExpr
+  return $ List [Atom "quote", x]
+
+parseQuasiquote :: Parser LispVal
+parseQuasiquote = do
+  char '`'
+  -- comma evaluate and comma at-sign (@) parse unfinished
+  xs <- parseLispList
+  return $ List [Atom "quasiquote", xs]
+
+parseLispVector :: Parser LispVal
+parseLispVector = do
+  char '#'
+  parseList

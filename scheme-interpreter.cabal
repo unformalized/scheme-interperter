@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.34.4.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 41f6a79b9960a21997faa7fffabc465f681c9f3fe421032061731bb8137155c9
+-- hash: 6a570fe73942c70d108da856970fea61ba4e5f28075e3d72a8a4f392d96d492e
 
 name:           scheme-interpreter
 version:        0.1.0.0
@@ -37,7 +37,11 @@ library
       src
   build-depends:
       base >=4.7 && <5
+    , ghc-prim
     , parsec
+    , primitive
+    , transformers
+    , vector
   default-language: Haskell2010
 
 executable scheme-interpreter-exe
@@ -49,20 +53,29 @@ executable scheme-interpreter-exe
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , ghc-prim
     , parsec
+    , primitive
     , scheme-interpreter
+    , transformers
+    , vector
   default-language: Haskell2010
 
 test-suite scheme-interpreter-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      VectorSpec
       Paths_scheme_interpreter
   hs-source-dirs:
       test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , ghc-prim
     , parsec
+    , primitive
     , scheme-interpreter
+    , transformers
+    , vector
   default-language: Haskell2010

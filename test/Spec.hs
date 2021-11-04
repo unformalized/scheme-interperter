@@ -2,6 +2,7 @@
 import Text.ParserCombinators.Parsec ( parse, Parser )
 import Value
 import Parse ( parseExpr, parseString, parseChar )
+import VectorSpec (test)
 
 showParseResult :: Show a => Parser a -> String -> String
 showParseResult pa s = case parse pa "test: " s of
@@ -25,7 +26,13 @@ testLispVal = [
   "0.123",
   "#o123",
   "#\\a",
-  "#xabc"
+  "#xabc",
+  -- list
+  "(a test)",
+  "(a (nested) test)",
+  "(a (dotted . list) test)",
+  "(a '(quoted (dotted . list)) test)",
+  "(a '(imbalanced parens)"
   ]
 
 testChar = [
@@ -36,5 +43,6 @@ testChar = [
 main :: IO ()
 main = do
     putStrLn "test start: "
-    mapM_ (putStrLn . testParseChar) testChar
-    mapM_ (putStrLn . testParseLispVal) testLispVal
+    -- mapM_ (putStrLn . testParseChar) testChar
+    -- mapM_ (putStrLn . testParseLispVal) testLispVal
+    test
