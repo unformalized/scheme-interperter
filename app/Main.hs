@@ -1,11 +1,10 @@
 module Main where
 
-import Bootstrap
+import Bootstrap (readExpr)
+import Evaluation (eval)
 import System.Environment
 
 main :: IO ()
 main = do
-    args <- getArgs
-    putStrLn (readExpr (head args))
-
-
+  args <- getArgs
+  putStrLn (show $ eval $ readExpr (head args))
