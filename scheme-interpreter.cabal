@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 5393bb233c3d432bdbe6b9b4f6aa077836d58df0e71f243d06d58ef371270999
+-- hash: 5752ad0d1f30f18671d32290395324e93871dc4d64917507e6f1086846d82cae
 
 name:           scheme-interpreter
 version:        0.1.0.0
@@ -31,6 +31,7 @@ library
       Evaluation
       Lib
       Parse
+      PrimOp
       Value
   other-modules:
       Paths_scheme_interpreter
