@@ -1,25 +1,29 @@
 {-# LANGUAGE FlexibleContexts #-}
+
 module Parse where
 
-import Text.Parsec hiding (spaces, try)
-import Text.ParserCombinators.Parsec ( Parser, try )
 -- utils
-import Control.Monad ( liftM )
-import Control.Applicative ( liftA2, Alternative (empty) )
-import Data.Char ( isPrint )
-import Numeric
+
+import Control.Applicative (Alternative (empty), liftA2)
+import Control.Monad (liftM)
 -- struct
-import Value ( LispVal(Number, Atom, Bool, String, Char, Float, List, DottedList, Vector) )
-import Data.Vector ()
-import Lib (listToVector, ioListToVector)
+
 import Control.Monad.Primitive (PrimMonad)
 import Control.Monad.ST (runST)
+import Data.Char (isPrint)
+import qualified Data.Vector as V
+import qualified Data.Vector.Mutable as MV
+import Lib (ioListToVector, listToVector)
+import Numeric
+import Text.Parsec hiding (spaces, try)
+import Text.ParserCombinators.Parsec (Parser, try)
+import Value (LispVal (Atom, Bool, Char, DottedList, Float, List, Number, String, Vector))
 
 symbol :: Parser Char
 symbol = oneOf "!$%&|*+-/:<=?>@^_~#"
 
 spaces :: Parser ()
-spaces = skipMany1 space
+spaces = skipMany space
 
 parseBackslash :: Parser Char
 parseBackslash = char '\\'
@@ -28,15 +32,17 @@ parseEscape :: Parser Char
 parseEscape = parseBackslash >> choice (zipWith escapedChar codes replacements)
   where
     escapedChar code replacement = char code >> return replacement
-    codes        = ['b',  'n',  'f',  'r',  't',  '\\', '\"', '/']
+    codes = ['b', 'n', 'f', 'r', 't', '\\', '\"', '/']
     replacements = ['\b', '\n', '\f', '\r', '\t', '\\', '\"', '/']
 
 parseString :: Parser LispVal
-parseString = do char '"'
-                 x <- many $ chars
-                 char '"'
-                 return $ String x
-  where chars = parseEscape <|> noneOf "\""
+parseString = do
+  char '"'
+  x <- many $ chars
+  char '"'
+  return $ String x
+  where
+    chars = parseEscape <|> noneOf "\""
 
 parseAtom :: Parser LispVal
 parseAtom = do
@@ -51,7 +57,7 @@ parseAtom = do
 parseDecNum :: Parser LispVal
 parseDecNum = do
   decS <- many1 digit
-  let decN:_ = readDec decS
+  let decN : _ = readDec decS
   return . Number . fst $ decN
 
 parseOctNum :: Parser LispVal
@@ -59,7 +65,7 @@ parseOctNum = do
   octS <- string "#o" >> many1 (oneOf octNS)
   case readOct octS of
     [] -> parserFail ("oct parse error: " ++ octS)
-    octN:_ -> return . Number . fst $ octN
+    octN : _ -> return . Number . fst $ octN
   where
     octNS = "01234567"
 
@@ -68,14 +74,14 @@ parseHexNum = do
   hexS <- string "#x" >> many1 (oneOf hexNS)
   case readHex hexS of
     [] -> parserFail ("hex parse error: " ++ hexS)
-    hexN:_ -> return . Number . fst $ hexN
+    hexN : _ -> return . Number . fst $ hexN
   where
     hexNS = "abcdef0123456789"
 
-parseInteger :: Parser LispVal 
+parseInteger :: Parser LispVal
 parseInteger = choice [try parseDecNum, try parseOctNum, try parseHexNum]
 
-parseChar :: Parser LispVal 
+parseChar :: Parser LispVal
 parseChar = do
   c <- choice [try charNewline, try charSpace, try charPrint]
   return (Char c)
@@ -92,22 +98,24 @@ parseFloat = do
   integer <- many digit
   dot <- char '.'
   frac <- many digit
-  let floatS = integer ++ (dot:frac)
+  let floatS = integer ++ (dot : frac)
       floatList = readFloat floatS
   case floatList of
     [] -> parserFail ("float parse error: " ++ floatS)
-    (float:_) -> return .  Float . fst $ float
+    (float : _) -> return . Float . fst $ float
 
 parseExpr :: Parser LispVal
-parseExpr = choice [
-  try parseInteger,
-  try parseChar,
-  try parseFloat,
-  try parseAtom,
-  try parseString,
-  try parseQuoted,
-  try parseLispList
-  ]
+parseExpr =
+  choice
+    [ try parseInteger,
+      try parseChar,
+      try parseFloat,
+      try parseString,
+      try parseQuoted,
+      try parseLispList,
+      try parseLispVector,
+      try parseAtom
+    ]
 
 parseList :: Parser LispVal
 parseList = liftM List $ sepBy parseExpr spaces
@@ -138,7 +146,13 @@ parseQuasiquote = do
   xs <- parseLispList
   return $ List [Atom "quasiquote", xs]
 
+parseVector :: Parser LispVal
+parseVector = liftM (Vector . V.fromList) $ sepBy parseExpr spaces
+
 parseLispVector :: Parser LispVal
 parseLispVector = do
   char '#'
-  parseList
+  char '('
+  els <- parseVector
+  char ')'
+  return els

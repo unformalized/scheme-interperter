@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 6a570fe73942c70d108da856970fea61ba4e5f28075e3d72a8a4f392d96d492e
+-- hash: 5393bb233c3d432bdbe6b9b4f6aa077836d58df0e71f243d06d58ef371270999
 
 name:           scheme-interpreter
 version:        0.1.0.0
@@ -28,6 +28,7 @@ source-repository head
 library
   exposed-modules:
       Bootstrap
+      Evaluation
       Lib
       Parse
       Value
