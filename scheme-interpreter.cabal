@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 5752ad0d1f30f18671d32290395324e93871dc4d64917507e6f1086846d82cae
+-- hash: ad347cd4ddfc1a6148f0584b7dca831dbcdfb4edb461c19d26294357efebf043
 
 name:           scheme-interpreter
 version:        0.1.0.0
@@ -28,6 +28,7 @@ source-repository head
 library
   exposed-modules:
       Bootstrap
+      Error
       Evaluation
       Lib
       Parse
@@ -40,6 +41,7 @@ library
   build-depends:
       base >=4.7 && <5
     , ghc-prim
+    , mtl >=2.2.2 && <2.3
     , parsec
     , primitive
     , transformers
@@ -56,6 +58,7 @@ executable scheme-interpreter-exe
   build-depends:
       base >=4.7 && <5
     , ghc-prim
+    , mtl >=2.2.2 && <2.3
     , parsec
     , primitive
     , scheme-interpreter
@@ -75,6 +78,7 @@ test-suite scheme-interpreter-test
   build-depends:
       base >=4.7 && <5
     , ghc-prim
+    , mtl >=2.2.2 && <2.3
     , parsec
     , primitive
     , scheme-interpreter

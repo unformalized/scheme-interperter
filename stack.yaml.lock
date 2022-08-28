@@ -5,17 +5,31 @@
 
 packages:
 - completed:
-    hackage: vector-0.12.3.1@sha256:672884b271c15501f1398dc1755c435d3659cf9aa77144c0316d055b5fbdfa82,7932
-    pantry-tree:
-      size: 3842
-      sha256: 7201fd69d4558190fa28b3cc0a5e21a47453647c5ccb23d949a63ba07f0ef8b9
-  original:
-    hackage: vector-0.12.3.1@sha256:672884b271c15501f1398dc1755c435d3659cf9aa77144c0316d055b5fbdfa82,7932
-- completed:
-    hackage: primitive-0.7.3.0@sha256:6b28a1c0572f5ca50597ba8388aeade21515842969ae192cdc6bfca81367bf56,2951
+    hackage: primitive-0.7.4.0@sha256:89b88a3e08493b7727fa4089b0692bfbdf7e1e666ef54635f458644eb8358764,2857
     pantry-tree:
       size: 1655
-      sha256: 4dd118201091c04a138a25e262ab61e8e64e811832eadd8b6b39d56504dfe045
+      sha256: 71a850c658b70e869da19f61615d87d9d6ecec597f0e3d4b498da56559114829
   original:
-    hackage: primitive-0.7.3.0@sha256:6b28a1c0572f5ca50597ba8388aeade21515842969ae192cdc6bfca81367bf56,2951
+    hackage: primitive-0.7.4.0@sha256:89b88a3e08493b7727fa4089b0692bfbdf7e1e666ef54635f458644eb8358764,2857
+- completed:
+    hackage: vector-0.13.0.0@sha256:54528e95501742b99462cc543891f21177e7db34d960ce8e3cbb25afb16a9c89,9112
+    pantry-tree:
+      size: 4092
+      sha256: 70b31fa3803fc53ff469beba9e5022e92f6704e9b0ece953a0373b35ef09ca4d
+  original:
+    hackage: vector-0.13.0.0@sha256:54528e95501742b99462cc543891f21177e7db34d960ce8e3cbb25afb16a9c89,9112
+- completed:
+    hackage: vector-stream-0.1.0.0@sha256:09b0f8dc4e51936b9d6b04791f0aa03f7c9759b5fb7140eac8a9461cda1e55a3,1404
+    pantry-tree:
+      size: 325
+      sha256: 3753f1a0a0889a87e185a5a4537f6cf6f0dea1b71b8b2655c016dddcc2519fea
+  original:
+    hackage: vector-stream-0.1.0.0@sha256:09b0f8dc4e51936b9d6b04791f0aa03f7c9759b5fb7140eac8a9461cda1e55a3,1404
+- completed:
+    hackage: monads-tf-0.1.0.3@sha256:25b5d97af98adf7eca709c57f159c6c24c773cbb30e153abaeb156d81a451195,1427
+    pantry-tree:
+      size: 1542
+      sha256: cbeae69c31cf2206ceaa46d037695f7d5173896a43f817706b5bce77451027c1
+  original:
+    hackage: monads-tf-0.1.0.3@sha256:25b5d97af98adf7eca709c57f159c6c24c773cbb30e153abaeb156d81a451195,1427
 snapshots: []

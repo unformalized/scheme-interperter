@@ -1,9 +1,11 @@
 -- |
 module PrimOp where
 
+import Control.Monad.Error (MonadError (throwError))
+import Error (LispError (..), ThrowsError)
 import Value (LispVal (..))
 
-primitives :: [(String, [LispVal] -> LispVal)]
+primitives :: [(String, [LispVal] -> ThrowsError LispVal)]
 primitives =
   [ ("+", numericBinop (+)),
     ("-", numericBinop (-)),
@@ -16,45 +18,48 @@ primitives =
     ++ map (\op -> (op, typeBinop op)) typeOpList
     ++ symbolOpList
 
-numericBinop :: (Integer -> Integer -> Integer) -> [LispVal] -> LispVal
-numericBinop op params = Number $ foldl1 op $ map unpackNum params
+numericBinop :: (Integer -> Integer -> Integer) -> [LispVal] -> ThrowsError LispVal
+numericBinop op singleVal@[_] = throwError $ NumArgs 2 singleVal
+numericBinop op params = mapM unpackNum params >>= return . Number . foldl1 op
 
-unpackNum :: LispVal -> Integer
-unpackNum (Number n) = n
+unpackNum :: LispVal -> ThrowsError Integer
+unpackNum (Number n) = return n
 -- unpackNum (String s) =
 --   let parsed = reads s
 --    in if null parsed
 --         then 0
 --         else fst $ head parsed
 -- unpackNum (List [n]) = unpackNum n
-unpackNum _ = 0
+unpackNum notNum = throwError $ TypeMismatch "number" notNum
 
 typeOpList :: [String]
 typeOpList = ["string?", "boolean?", "number?", "symbol?"]
 
-typeBinop :: String -> [LispVal] -> LispVal
-typeBinop "string?" ((String _) : _) = Bool True
-typeBinop "string?" _ = Bool False
-typeBinop "boolean?" ((Bool _) : _) = Bool True
-typeBinop "boolean?" _ = Bool False
-typeBinop "number?" ((Number _) : _) = Bool True
-typeBinop "number?" _ = Bool False
-typeBinop "symbol?" ((Atom _) : _) = Bool True
-typeBinop "symbol?" _ = Bool False
-typeBinop _ _ = Bool False
+typeBinop :: String -> [LispVal] -> ThrowsError LispVal
+typeBinop "string?" ((String _) : _) = return $ Bool True
+typeBinop "string?" _ = return $ Bool False
+typeBinop "boolean?" ((Bool _) : _) = return $ Bool True
+typeBinop "boolean?" _ = return $ Bool False
+typeBinop "number?" ((Number _) : _) = return $ Bool True
+typeBinop "number?" _ = return $ Bool False
+typeBinop "symbol?" ((Atom _) : _) = return $ Bool True
+typeBinop "symbol?" _ = return $ Bool False
+typeBinop typeFunc _ = throwError $ NotFunction "unrecognized primitive function" typeFunc
 
 -- symbol operator
 
-symbolOpList :: [(String, [LispVal] -> LispVal)]
+symbolOpList :: [(String, [LispVal] -> ThrowsError LispVal)]
 symbolOpList =
-  [ ("symbol->string", symbol2str . head),
-    ("string->symbol", str2symbol . head)
+  [ ("symbol->string", symbol2str),
+    ("string->symbol", str2symbol)
   ]
 
-symbol2str :: LispVal -> LispVal
-symbol2str (Atom name) = String name
-symbol2str _ = String ""
+symbol2str :: [LispVal] -> ThrowsError LispVal
+symbol2str [Atom name] = return $ String name
+symbol2str [val] = throwError $ ArgsError "symbol" [val]
+symbol2str args = throwError $ NumArgs 1 args
 
-str2symbol :: LispVal -> LispVal
-str2symbol (String name) = Atom name
-str2symbol _ = Atom ""
+str2symbol :: [LispVal] -> ThrowsError LispVal
+str2symbol [String name] = return $ Atom name
+str2symbol [val] = throwError $ ArgsError "string" [val]
+str2symbol args = throwError $ NumArgs 1 args
