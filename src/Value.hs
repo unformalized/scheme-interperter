@@ -1,9 +1,11 @@
+{-# LANGUAGE InstanceSigs #-}
+
 -- |
-module Value where
+module Value (LispVal (..), unWordList, unWordVector) where
 
 import qualified Data.Vector as V
 
-data Number = Integer | Double
+-- data Number = Integer | Double
 
 data LispVal
   = Atom String
@@ -17,6 +19,7 @@ data LispVal
   | Bool Bool
 
 instance Show LispVal where
+  show :: LispVal -> String
   show = showVal
 
 showVal :: LispVal -> String
@@ -27,12 +30,12 @@ showVal (Bool True) = "#t"
 showVal (Bool False) = "#f"
 showVal (Float f) = show f
 showVal (Char c) = show c
-showVal (List contents) = "(" ++ unwordsList contents ++ ")"
-showVal (DottedList head tail) = "(" ++ unwordsList head ++ " . " ++ showVal tail ++ ")"
-showVal (Vector xs) = "#(" ++ unwordsVector xs ++ ")"
+showVal (List contents) = "(" ++ unWordList contents ++ ")"
+showVal (DottedList head tail) = "(" ++ unWordList head ++ " . " ++ showVal tail ++ ")"
+showVal (Vector xs) = "#(" ++ unWordVector xs ++ ")"
 
-unwordsList :: [LispVal] -> String
-unwordsList = unwords . map showVal
+unWordList :: [LispVal] -> String
+unWordList = unwords . map showVal
 
-unwordsVector :: V.Vector LispVal -> String
-unwordsVector xs = V.foldl1 (\x1 x2 -> x1 ++ " " ++ x2) $ V.map showVal xs
+unWordVector :: V.Vector LispVal -> String
+unWordVector xs = V.foldl1 (\x1 x2 -> x1 ++ " " ++ x2) $ V.map showVal xs

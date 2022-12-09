@@ -9,5 +9,5 @@ import System.Environment
 main :: IO ()
 main = do
   args <- getArgs
-  evalVal <- return $ liftM show $ readExpr (head args) >>= eval
+  let evalVal = liftM show $ readExpr (head args) >>= eval
   putStrLn $ extractValue $ trapError evalVal

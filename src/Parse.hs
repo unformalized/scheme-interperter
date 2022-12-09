@@ -17,7 +17,7 @@ import Lib (ioListToVector, listToVector)
 import Numeric
 import Text.Parsec hiding (spaces, try)
 import Text.ParserCombinators.Parsec (Parser, try)
-import Value (LispVal (Atom, Bool, Char, DottedList, Float, List, Number, String, Vector))
+import Value (LispVal (..))
 
 symbol :: Parser Char
 symbol = oneOf "!$%&|*+-/:<=?>@^_~#"
