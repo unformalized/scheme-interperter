@@ -17,7 +17,8 @@ eval (List [Atom "if", pred, conseq, alt]) =
     result <- eval pred
     case result of
       Bool False -> eval alt
-      _ -> eval conseq
+      Bool True -> eval conseq
+      err -> throwError $ TypeMismatch "bool" err
 eval (List (Atom func : args)) = mapM eval args >>= apply func
 eval badForm = throwError $ BadSpecialForm "Unrecognized special form" badForm
 
