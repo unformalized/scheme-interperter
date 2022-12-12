@@ -1,2 +1,3 @@
 - ignore: { name: Use head }
 - ignore: { name: Use fmap }
+- ignore: { name: Use section }

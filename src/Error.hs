@@ -2,7 +2,8 @@
 
 module Error where
 
-import Control.Monad.Error (Error (..), ErrorT, catchError)
+import Control.Monad.Error (Error (..), ErrorT (runErrorT), MonadError (throwError), catchError)
+import Data.Functor ((<&>))
 import Text.ParserCombinators.Parsec (ParseError)
 import Value (LispVal, unWordList)
 
@@ -13,11 +14,11 @@ data LispError
   | Parser ParseError
   | BadSpecialForm String LispVal
   | NotFunction String String
-  | UnboxedVar String String
+  | UnboundVar String String
   | Default String
 
 showError :: LispError -> String
-showError (UnboxedVar message varname) = message ++ ": " ++ varname
+showError (UnboundVar message varname) = message ++ ": " ++ varname
 showError (TypeMismatch expected found) = "Invalid type: " ++ expected ++ ", found: " ++ show found
 showError (BadSpecialForm message form) = message ++ ": " ++ show form
 showError (NotFunction message func) = message ++ ": " ++ show func
@@ -38,8 +39,17 @@ instance Error LispError where
 
 type ThrowsError = Either LispError
 
+type IOThrowsError = ErrorT LispError IO
+
 trapError action = catchError action (return . show)
 
 extractValue :: ThrowsError a -> a
 extractValue (Right val) = val
 extractValue (Left err) = error (showError err)
+
+liftThrows :: ThrowsError a -> IOThrowsError a
+liftThrows (Left err) = throwError err
+liftThrows (Right val) = return val
+
+runIOThrows :: IOThrowsError String -> IO String
+runIOThrows action = runErrorT (trapError action) <&> extractValue
