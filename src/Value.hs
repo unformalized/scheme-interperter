@@ -3,10 +3,12 @@
 -- |
 module Value where
 
-import Control.Monad.Error (Error (..), ErrorT (runErrorT), MonadError (catchError, throwError))
+import Control.Monad.Error (Error (..), ErrorT (runErrorT), MonadError (catchError, throwError), liftM)
+import Control.Monad.IO.Class (liftIO)
 import Data.Functor ((<&>))
 import Data.IORef (IORef)
 import qualified Data.Vector as V
+import System.IO (Handle, IOMode, hClose, openFile, stdin)
 import Text.ParserCombinators.Parsec (ParseError)
 
 -- data Number = Integer | Double
@@ -23,6 +25,8 @@ data LispVal
   | Bool Bool
   | PrimitiveFunc ([LispVal] -> ThrowsError LispVal)
   | Func {params :: [String], varArgs :: Maybe String, body :: [LispVal], closure :: Env}
+  | IOFunc ([LispVal] -> IOThrowsError LispVal)
+  | Port Handle
 
 instance Show LispVal where
   show :: LispVal -> String
@@ -47,12 +51,23 @@ showVal Func {params = args, varArgs = varArgs, body = body, closure = env} =
            Just arg -> " . " ++ arg
        )
     ++ ") ...)"
+showVal (Port _) = "<IO port>"
+showVal (IOFunc _) = "<IO primitive>"
 
 unWordList :: [LispVal] -> String
 unWordList = unwords . map showVal
 
 unWordVector :: V.Vector LispVal -> String
 unWordVector xs = V.foldl1 (\x1 x2 -> x1 ++ " " ++ x2) $ V.map showVal xs
+
+makeFunc :: Monad m => Maybe String -> Env -> [LispVal] -> [LispVal] -> m LispVal
+makeFunc varArgs env params body = return $ Func (map showVal params) varArgs body env
+
+makeNormalFunc :: Monad m => Env -> [LispVal] -> [LispVal] -> m LispVal
+makeNormalFunc = makeFunc Nothing
+
+makeVarArgs :: Monad m => LispVal -> Env -> [LispVal] -> [LispVal] -> m LispVal
+makeVarArgs = makeFunc . Just . showVal
 
 -- env
 
@@ -76,7 +91,7 @@ showError (TypeMismatch expected found) = "Invalid type: " ++ expected ++ ", fou
 showError (BadSpecialForm message form) = message ++ ": " ++ show form
 showError (NotFunction message func) = message ++ ": " ++ show func
 showError (NumArgs expected found) = "Expected " ++ show expected ++ " args, actual args: " ++ unWordList found
-showError (ArgsError expected found) = "Expected " ++ show expected ++ " , actual args: " ++ unWordList found
+showError (ArgsError expected found) = "Expected " ++ expected ++ " , actual args: " ++ unWordList found
 showError (Parser parseErr) = "Parse error at: " ++ show parseErr
 showError (Default error) = "Default error: " ++ show error
 
@@ -107,3 +122,15 @@ liftThrows (Right val) = return val
 
 runIOThrows :: IOThrowsError String -> IO String
 runIOThrows action = runErrorT (trapError action) <&> extractValue
+
+-- io and port functions
+
+makePort :: IOMode -> [LispVal] -> IOThrowsError LispVal
+makePort mode [String filename] = liftM Port $ liftIO $ openFile filename mode
+makePort _ badArgList = throwError $ ArgsError "String as filename" badArgList
+
+closePort :: [LispVal] -> IOThrowsError LispVal
+closePort [Port port] = liftIO $ hClose port >> return (Bool True)
+closePort _ = return $ Bool False
+
+-- closePort badArgList = throwError $ ArgsError "IO Port" badArgList

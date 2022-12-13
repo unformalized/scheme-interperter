@@ -5,7 +5,9 @@ module PrimOp where
 
 import Control.Monad.Error (MonadError (catchError, throwError), liftM)
 import Data.Functor ((<&>))
-import Value (LispError (..), LispVal (..), ThrowsError)
+import Evaluation (applyProc, readAll, readContents, readProc, writeProc)
+import System.IO (IOMode (..))
+import Value (IOThrowsError, LispError (..), LispVal (..), ThrowsError, closePort, makePort)
 
 primitives :: [(String, [LispVal] -> ThrowsError LispVal)]
 primitives =
@@ -37,6 +39,21 @@ primitives =
   ]
     ++ map (\op -> (op, typeBinop op)) typeOpList
     ++ symbolOpList
+
+-- io primitives
+
+ioPrimitives :: [(String, [LispVal] -> IOThrowsError LispVal)]
+ioPrimitives =
+  [ ("apply", applyProc),
+    ("open-input-file", makePort ReadMode),
+    ("open-output-file", makePort WriteMode),
+    ("close-input-file", closePort),
+    ("close-output-file", closePort),
+    ("read", readProc),
+    ("write", writeProc),
+    ("read-contents", readContents),
+    ("read-all", readAll)
+  ]
 
 numericBinop :: (Integer -> Integer -> Integer) -> [LispVal] -> ThrowsError LispVal
 numericBinop op singleVal@[_] = throwError $ NumArgs 2 singleVal
