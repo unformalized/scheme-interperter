@@ -2,10 +2,10 @@ module Main where
 
 import Bootstrap (readExpr)
 import Control.Monad (liftM)
-import Error (extractValue, liftThrows, runIOThrows, trapError)
 import Evaluation (eval)
-import Repl (Env, nullEnv, readPrompt)
+import Repl (nullEnv, readPrompt)
 import System.Environment (getArgs)
+import Value (Env, extractValue, liftThrows, runIOThrows, trapError)
 
 evalString :: Env -> String -> IO String
 evalString env expr = runIOThrows $ liftM show $ liftThrows (readExpr expr) >>= eval env

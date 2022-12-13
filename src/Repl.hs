@@ -4,19 +4,16 @@ module Repl where
 import Control.Monad.Error (liftM, throwError)
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import Data.Functor ((<&>))
-import Data.IORef (IORef, newIORef, readIORef, writeIORef)
+import Data.IORef (newIORef, readIORef, writeIORef)
 import Data.Maybe (isJust)
-import Error (IOThrowsError, LispError (UnboundVar))
 import System.IO (hFlush, stdout)
-import Value (LispVal (..))
+import Value (Env, IOThrowsError, LispError (..), LispVal (..))
 
 flushStr :: String -> IO ()
 flushStr str = putStr str >> hFlush stdout
 
 readPrompt :: String -> IO String
 readPrompt prompt = flushStr prompt >> getLine
-
-type Env = IORef [(String, IORef LispVal)]
 
 nullEnv :: IO Env
 nullEnv = newIORef []

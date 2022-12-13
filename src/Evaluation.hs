@@ -3,10 +3,9 @@ module Evaluation where
 
 import Control.Monad.Error (MonadError (throwError))
 import qualified Data.Vector as V
-import Error (IOThrowsError, LispError (..), ThrowsError, liftThrows)
 import PrimOp (primitives)
-import Repl (Env, defineVar, getVar, setVar)
-import Value (LispVal (..))
+import Repl (defineVar, getVar, setVar)
+import Value (Env, IOThrowsError, LispError (..), LispVal (..), ThrowsError, liftThrows)
 
 eval :: Env -> LispVal -> IOThrowsError LispVal
 eval env val@(String _) = return val

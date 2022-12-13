@@ -5,8 +5,7 @@ module PrimOp where
 
 import Control.Monad.Error (MonadError (catchError, throwError), liftM)
 import Data.Functor ((<&>))
-import Error (LispError (..), ThrowsError)
-import Value (LispVal (..))
+import Value (LispError (..), LispVal (..), ThrowsError)
 
 primitives :: [(String, [LispVal] -> ThrowsError LispVal)]
 primitives =

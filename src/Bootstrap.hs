@@ -4,10 +4,9 @@ module Bootstrap
 where
 
 import Control.Monad.Error (MonadError (throwError))
-import Error (LispError (..), ThrowsError)
 import Parse (parseExpr, spaces)
 import Text.ParserCombinators.Parsec (parse)
-import Value (LispVal (String))
+import Value (LispError (..), LispVal (String), ThrowsError)
 
 readExpr :: String -> ThrowsError LispVal
 readExpr input = case parse (spaces >> parseExpr) "lisp" input of
